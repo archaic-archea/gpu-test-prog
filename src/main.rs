@@ -8,6 +8,10 @@ mod render;
 mod texture;
 mod camera;
 
+// X - Roll
+// Y - Pitch
+// Z - Yaw
+
 fn main() {
     let (obj, _) = tobj::load_obj(
         "./utahteapot.obj", 
@@ -28,7 +32,7 @@ fn main() {
 
     for index in 0..(vert.len() / 3) {
         let index = index * 3;
-        let vert = [vert[index], vert[index + 1], vert[index + 2]];
+        let vert = [-vert[index], vert[index + 2], -vert[index + 1]];
         let tex = if tex.len() != 0 {
             [tex[index], tex[index + 1]]
         } else {

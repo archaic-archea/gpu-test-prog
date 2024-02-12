@@ -116,9 +116,9 @@ impl CameraController {
 
     pub fn update_camera(&self, camera: &mut Camera) {
         let forward = Vector3::new(
-            camera.dir.z.cos() * camera.dir.x.sin(), 
-            -camera.dir.z.sin(), 
-            camera.dir.z.cos() * camera.dir.x.cos()
+            camera.dir.y.cos() * camera.dir.z.sin(), 
+            -camera.dir.y.sin(), 
+            camera.dir.y.cos() * camera.dir.z.cos()
         );
 
         if self.is_forward_pressed {
