@@ -1,7 +1,7 @@
 use std::sync::Mutex;
 use crate::texture;
 
-use cgmath::{Deg, Euler, Vector3};
+use cgmath::{Deg, Euler, Point3, Vector3};
 use winit::{event::{ElementState, WindowEvent}, raw_window_handle::HasWindowHandle, window::Window};
 use wgpu::util::DeviceExt;
 use winit::raw_window_handle::HasDisplayHandle;
@@ -182,8 +182,8 @@ impl<'a> RenderState<'a> {
         });
 
         let camera = crate::camera::Camera {
-            pos: Vector3::new(00.0, 00.0, 10.0),
-            dir: Euler::new(Deg(90.0), Deg(0.0), Deg(0.0)),
+            pos: Point3::new(0.0, 0.0, 0.0),
+            dir: Euler::new(Deg(0.0), Deg(0.0), Deg(00.0)),
             aspect: config.width as f32 / config.height as f32,
             fovy: 45.0,
             znear: 0.1,
@@ -319,6 +319,8 @@ impl<'a> RenderState<'a> {
         self.camera.dir.x += e.x;
         self.camera.dir.y += e.y;
         self.camera.dir.z += e.z;
+
+        println!("{:?}", self.camera.dir);
     }
 
     pub fn window(&self) -> &Window {

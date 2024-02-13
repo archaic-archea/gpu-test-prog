@@ -1,4 +1,6 @@
-use cgmath::{Angle, Euler, SquareMatrix, Vector3, Vector4};
+use std::f32::consts::FRAC_PI_2;
+
+use cgmath::{Angle, Euler, Point3, Rad, SquareMatrix, Vector3, Vector4};
 use winit::{event::KeyEvent, keyboard::{KeyCode, PhysicalKey}};
 
 
@@ -12,7 +14,7 @@ pub const OPENGL_TO_WGPU_MATRIX: cgmath::Matrix4<f32> = cgmath::Matrix4::new(
 
 pub struct Camera {
     pub dir: Euler<cgmath::Deg<f32>>,
-    pub pos: Vector3<f32>,
+    pub pos: Point3<f32>,
     pub aspect: f32,
     pub fovy: f32,
     pub znear: f32,
@@ -21,9 +23,12 @@ pub struct Camera {
 
 impl Camera {
     fn build_view_projection_matrix(&self) -> cgmath::Matrix4<f32> {
-        let mut view = cgmath::Matrix4::from(self.dir);
-        view.w = Vector4::new(self.pos.x, self.pos.y, self.pos.z, 1.0);
-        view = view.invert().unwrap();
+        use cgmath::InnerSpace;
+        let (yaw_sin, yaw_cos) = self.dir.y.0.sin_cos();
+        let (pitch_sin, pitch_cos) = self.dir.x.0.sin_cos();
+        let forward = Vector3::new(pitch_cos * yaw_sin, -pitch_sin, pitch_cos * yaw_cos).normalize();
+
+        let view = cgmath::Matrix4::look_to_rh(self.pos, forward, Vector3::new(0.0, 1.0, 0.0));
         let proj = cgmath::perspective(cgmath::Deg(self.fovy), self.aspect, self.znear, self.zfar);
         proj * view
     }
@@ -115,16 +120,37 @@ impl CameraController {
     }
 
     pub fn update_camera(&self, camera: &mut Camera) {
-        let forward = Vector3::new(
-            camera.dir.y.cos() * camera.dir.z.sin(), 
-            -camera.dir.y.sin(), 
-            camera.dir.y.cos() * camera.dir.z.cos()
-        );
+        use cgmath::InnerSpace;
+        let (yaw_sin, yaw_cos) = camera.dir.y.0.sin_cos();
+        let (pitch_sin, pitch_cos) = camera.dir.x.0.sin_cos();
+        //let forward = Vector3::new(yaw_sin, 0.0, yaw_cos).normalize();
+        //let right = Vector3::new(-yaw_cos, 0.0, yaw_sin).normalize();
+        let forward = Vector3::new(pitch_cos * yaw_sin, -pitch_sin, pitch_cos * yaw_cos).normalize();
+        let right = Vector3::new(yaw_cos, 0.0, -yaw_sin).normalize();
+        let up = forward.cross(right);
 
         if self.is_forward_pressed {
+            println!("Camera dir is {:?}", camera.dir);
+            println!("Foward is {:?}", forward);
             camera.pos += forward * self.speed;
+            //println!("Now at {:?}", camera.pos);
         } else if self.is_backward_pressed {
+            //println!("Foward is {:?}", forward);
+            println!("Foward is {:?}", forward);
             camera.pos -= forward * self.speed;
+            //println!("Now at {:?}", camera.pos);
+        } else if self.is_right_pressed {
+            println!("Right is {:?}", right);
+            camera.pos += right * self.speed;
+        } else if self.is_left_pressed {
+            println!("Right is {:?}", right);
+            camera.pos -= right * self.speed;
+        }
+
+        if self.is_up_pressed {
+            camera.pos += up * self.speed;
+        } else if self.is_down_pressed {
+            camera.pos -= up * self.speed;
         }
 
         /*use cgmath::InnerSpace;

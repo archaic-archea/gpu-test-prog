@@ -8,9 +8,9 @@ mod render;
 mod texture;
 mod camera;
 
-// X - Roll
-// Y - Pitch
-// Z - Yaw
+// X - Right (positive)   Left (negative)     - Pitch
+// Y - Up (positive)      Down (negative)     - Yaw
+// Z - Forward (positive) Backward (negative) - Roll
 
 fn main() {
     let (obj, _) = tobj::load_obj(
@@ -32,7 +32,7 @@ fn main() {
 
     for index in 0..(vert.len() / 3) {
         let index = index * 3;
-        let vert = [-vert[index], vert[index + 2], -vert[index + 1]];
+        let vert = [vert[index], vert[index + 1], vert[index + 2]];
         let tex = if tex.len() != 0 {
             [tex[index], tex[index + 1]]
         } else {
@@ -76,7 +76,7 @@ fn main() {
 }
 
 pub fn win_loop(mut state: render::RenderState, event_loop: EventLoop<()>) {
-    let sensitivity = 1.0;
+    let sensitivity = 0.01;
 
     let mut cursor_in: Option<winit::event::DeviceId> = None;
     let mut cursor_pos: Option<winit::dpi::PhysicalPosition<f64>> = None;
@@ -114,13 +114,13 @@ pub fn win_loop(mut state: render::RenderState, event_loop: EventLoop<()>) {
 
                                 cursor_pos = Some(new_pos.clone());
 
-                                let rel_x = ((new_pos.x - old_pos.x) * -sensitivity) as f32;
-                                let rel_y = ((new_pos.y - old_pos.y) * sensitivity) as f32;
+                                let yaw = ((new_pos.x - old_pos.x) * -sensitivity) as f32;
+                                let pitch = ((new_pos.y - old_pos.y) * sensitivity) as f32;
 
                                 let e = Euler::new(
-                                    Deg(rel_y), 
-                                    Deg(rel_x),
-                                    Deg(0.0),
+                                    Deg(pitch),
+                                    Deg(yaw), 
+                                    Deg(0.0)
                                 );
 
                                 state.cam_dir(e);
@@ -141,7 +141,7 @@ pub fn win_loop(mut state: render::RenderState, event_loop: EventLoop<()>) {
                             },
                             ..
                         } => {
-                            state.window().set_cursor_grab(winit::window::CursorGrabMode::None);
+                            state.window().set_cursor_grab(winit::window::CursorGrabMode::None).unwrap();
                         }
                         WindowEvent::Resized(physical_size) => {
                             state.resize(*physical_size);
